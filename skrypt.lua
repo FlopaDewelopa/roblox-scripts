@@ -1,6 +1,7 @@
 local Player = game.Players.LocalPlayer
 local Mouse = Player:GetMouse()
 local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "Silka"
@@ -93,31 +94,37 @@ local isSelecting = false
 local hoverConnection = nil
 local clickConnection = nil
 
+-- Funkcja do pozyskiwania parta pod myszką z pominięciem blokady Locked
+local function getMouseTargetIgnoringLocked()
+    local ray = Camera:ScreenPointToRay(Mouse.X, Mouse.Y)
+    local extendedRay = Ray.new(ray.Origin, ray.Direction * 1000)
+    local hitPart = workspace:FindPartOnRay(extendedRay, Player.Character)
+    return hitPart
+end
+
 SelectBtn.MouseButton1Click:Connect(function()
     if isSelecting then return end
     isSelecting = true
     SelectBtn.Text = "Wybierz"
     
-    -- Aktualizowanie podświetlenia na żywo (podążanie za myszką)
     hoverConnection = RunService.RenderStepped:Connect(function()
-        if Mouse.Target then
-            PartHighlight.Adornee = Mouse.Target
+        local target = getMouseTargetIgnoringLocked()
+        if target then
+            PartHighlight.Adornee = target
         else
             PartHighlight.Adornee = nil
         end
     end)
     
-    -- Zapisanie wybranego parta po kliknięciu
     clickConnection = Mouse.Button1Down:Connect(function()
-        if Mouse.Target then
-            selectedPart = Mouse.Target
+        local target = getMouseTargetIgnoringLocked()
+        if target then
+            selectedPart = target
             StatusLabel.Text = "Wybrano: " .. selectedPart.Name
             SelectBtn.Text = "Zmień part"
             
-            -- Zablokowanie podświetlenia na wybranym obiekcie
             PartHighlight.Adornee = selectedPart
             
-            -- Czyszczenie połączeń po wybraniu
             isSelecting = false
             if hoverConnection then hoverConnection:Disconnect() end
             if clickConnection then clickConnection:Disconnect() end
