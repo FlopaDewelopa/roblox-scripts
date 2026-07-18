@@ -94,6 +94,9 @@ local isSelecting = false
 local hoverConnection = nil
 local clickConnection = nil
 
+local lastHoveredPart = nil
+local lastHoveredTransparency = 0
+
 -- Zaawansowane szukanie parta (Locked + Niewidzialne)
 local function getMouseTargetAdvanced()
     local ray = Camera:ScreenPointToRay(Mouse.X, Mouse.Y)
@@ -102,15 +105,22 @@ local function getMouseTargetAdvanced()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character, ScreenGui}
     params.IgnoreWater = true
-    
-    -- Wymuszenie wykrywania obiektów bez kolizji oraz w pełni przezroczystych (1)
     params.BruteForceAllSlow = true 
     
     local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
-    if result and result.Instance then
+    if result and result.Instance and result.Instance:IsA("BasePart") then
         return result.Instance
     end
     return nil
+end
+
+local function resetLastHovered()
+    if lastHoveredPart then
+        pcall(function()
+            lastHoveredPart.Transparency = lastHoveredTransparency
+        end)
+        lastHoveredPart = nil
+    end
 end
 
 SelectBtn.MouseButton1Click:Connect(function()
@@ -118,11 +128,24 @@ SelectBtn.MouseButton1Click:Connect(function()
     isSelecting = true
     SelectBtn.Text = "Wybierz"
     
+    resetLastHovered()
+    
     hoverConnection = RunService.RenderStepped:Connect(function()
         local target = getMouseTargetAdvanced()
         if target then
+            if lastHoveredPart ~= target then
+                resetLastHovered()
+                lastHoveredPart = target
+                lastHoveredTransparency = target.Transparency
+                
+                -- Jeśli part jest całkiem niewidzialny, robimy go lekko widocznym, żeby Highlight zadziałał
+                if target.Transparency >= 0.95 then
+                    pcall(function() target.Transparency = 0.6 end)
+                end
+            end
             PartHighlight.Adornee = target
         else
+            resetLastHovered()
             PartHighlight.Adornee = nil
         end
     end)
@@ -130,10 +153,15 @@ SelectBtn.MouseButton1Click:Connect(function()
     clickConnection = Mouse.Button1Down:Connect(function()
         local target = getMouseTargetAdvanced()
         if target then
+            resetLastHovered()
             selectedPart = target
             StatusLabel.Text = "Wybrano: " .. selectedPart.Name
             SelectBtn.Text = "Zmień part"
             
+            -- Zostawiamy lekki widok jeśli był niewidzialny, żeby podświetlenie wybranego działało
+            if selectedPart.Transparency >= 0.95 then
+                pcall(function() selectedPart.Transparency = 0.6 end)
+            end
             PartHighlight.Adornee = selectedPart
             
             isSelecting = false
@@ -168,6 +196,7 @@ end)
 CloseBtn.MouseButton1Click:Connect(function()
     running = false
     isSelecting = false
+    resetLastHovered()
     if hoverConnection then hoverConnection:Disconnect() end
     if clickConnection then clickConnection:Disconnect() end
     if PartHighlight then PartHighlight:Destroy() end
