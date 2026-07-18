@@ -1,8 +1,9 @@
 local Player = game.Players.LocalPlayer
 local Mouse = Player:GetMouse()
+local RunService = game:GetService("RunService")
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GejMateusz - Silka"
+ScreenGui.Name = "Silka"
 ScreenGui.Parent = game.CoreGui
 
 local Frame = Instance.new("Frame", ScreenGui)
@@ -25,7 +26,7 @@ Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
 local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.Position = UDim2.new(0, 10, 0, 0)
-Title.Text = "Silka"
+Title.Text = "Mati to gej - silka"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
@@ -44,7 +45,7 @@ Instance.new("UICorner", SelectBtn).CornerRadius = UDim.new(0, 6)
 local StatusLabel = Instance.new("TextLabel", Frame)
 StatusLabel.Size = UDim2.new(0, 200, 0, 20)
 StatusLabel.Position = UDim2.new(0, 20, 0, 85)
-StatusLabel.Text = "Brak partu"
+StatusLabel.Text = "Brak parta"
 StatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Font = Enum.Font.Gotham
@@ -88,17 +89,38 @@ PartHighlight.Adornee = nil
 
 local selectedPart = nil
 local running = false
+local isSelecting = false
+local hoverConnection = nil
+local clickConnection = nil
 
 SelectBtn.MouseButton1Click:Connect(function()
-    SelectBtn.Text = "Kliknij w part"
-    local connection
-    connection = Mouse.Button1Down:Connect(function()
+    if isSelecting then return end
+    isSelecting = true
+    SelectBtn.Text = "Wybierz"
+    
+    -- Aktualizowanie podświetlenia na żywo (podążanie za myszką)
+    hoverConnection = RunService.RenderStepped:Connect(function()
+        if Mouse.Target then
+            PartHighlight.Adornee = Mouse.Target
+        else
+            PartHighlight.Adornee = nil
+        end
+    end)
+    
+    -- Zapisanie wybranego parta po kliknięciu
+    clickConnection = Mouse.Button1Down:Connect(function()
         if Mouse.Target then
             selectedPart = Mouse.Target
             StatusLabel.Text = "Wybrano: " .. selectedPart.Name
             SelectBtn.Text = "Zmień part"
-            PartHighlight.Adornee = selectedPart -- Ustawia podświetlenie na kliknięty part
-            connection:Disconnect()
+            
+            -- Zablokowanie podświetlenia na wybranym obiekcie
+            PartHighlight.Adornee = selectedPart
+            
+            -- Czyszczenie połączeń po wybraniu
+            isSelecting = false
+            if hoverConnection then hoverConnection:Disconnect() end
+            if clickConnection then clickConnection:Disconnect() end
         end
     end)
 end)
@@ -127,6 +149,9 @@ end)
 
 CloseBtn.MouseButton1Click:Connect(function()
     running = false
-    if PartHighlight then PartHighlight:Destroy() end -- Usuwa podświetlenie po zamknięciu
+    isSelecting = false
+    if hoverConnection then hoverConnection:Disconnect() end
+    if clickConnection then clickConnection:Disconnect() end
+    if PartHighlight then PartHighlight:Destroy() end
     ScreenGui:Destroy()
 end)
