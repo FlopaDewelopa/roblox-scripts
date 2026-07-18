@@ -94,12 +94,23 @@ local isSelecting = false
 local hoverConnection = nil
 local clickConnection = nil
 
--- Funkcja do pozyskiwania parta pod myszką z pominięciem blokady Locked
-local function getMouseTargetIgnoringLocked()
+-- Zaawansowane szukanie parta (Locked + Niewidzialne)
+local function getMouseTargetAdvanced()
     local ray = Camera:ScreenPointToRay(Mouse.X, Mouse.Y)
-    local extendedRay = Ray.new(ray.Origin, ray.Direction * 1000)
-    local hitPart = workspace:FindPartOnRay(extendedRay, Player.Character)
-    return hitPart
+    
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {Player.Character, ScreenGui}
+    params.IgnoreWater = true
+    
+    -- Wymuszenie wykrywania obiektów bez kolizji oraz w pełni przezroczystych (1)
+    params.BruteForceAllSlow = true 
+    
+    local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
+    if result and result.Instance then
+        return result.Instance
+    end
+    return nil
 end
 
 SelectBtn.MouseButton1Click:Connect(function()
@@ -108,7 +119,7 @@ SelectBtn.MouseButton1Click:Connect(function()
     SelectBtn.Text = "Wybierz"
     
     hoverConnection = RunService.RenderStepped:Connect(function()
-        local target = getMouseTargetIgnoringLocked()
+        local target = getMouseTargetAdvanced()
         if target then
             PartHighlight.Adornee = target
         else
@@ -117,7 +128,7 @@ SelectBtn.MouseButton1Click:Connect(function()
     end)
     
     clickConnection = Mouse.Button1Down:Connect(function()
-        local target = getMouseTargetIgnoringLocked()
+        local target = getMouseTargetAdvanced()
         if target then
             selectedPart = target
             StatusLabel.Text = "Wybrano: " .. selectedPart.Name
