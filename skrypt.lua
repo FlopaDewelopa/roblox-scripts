@@ -2,7 +2,7 @@ local Player = game.Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GejMateusz - Silka"
+ScreenGui.Name = "AutoPromptUI"
 ScreenGui.Parent = game.CoreGui
 
 local Frame = Instance.new("Frame", ScreenGui)
@@ -25,7 +25,7 @@ Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
 local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.Position = UDim2.new(0, 10, 0, 0)
-Title.Text = "Auto"
+Title.Text = "Auto Prompt"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
@@ -54,7 +54,7 @@ local IntervalBox = Instance.new("TextBox", Frame)
 IntervalBox.Size = UDim2.new(0, 200, 0, 35)
 IntervalBox.Position = UDim2.new(0, 20, 0, 110)
 IntervalBox.PlaceholderText = "Czas (sek)"
-IntervalBox.Text = "12"
+IntervalBox.Text = "15"
 IntervalBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 IntervalBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 IntervalBox.Font = Enum.Font.Gotham
@@ -82,7 +82,7 @@ local selectedPart = nil
 local running = false
 
 SelectBtn.MouseButton1Click:Connect(function()
-    SelectBtn.Text = "Kliknij w part"
+    SelectBtn.Text = "Kliknij w part na mapie"
     local connection
     connection = Mouse.Button1Down:Connect(function()
         if Mouse.Target then
@@ -103,6 +103,7 @@ StartBtn.MouseButton1Click:Connect(function()
             if selectedPart then
                 local prompt = selectedPart:FindFirstChildOfClass("ProximityPrompt")
                 if prompt then
+                    prompt.HoldDuration = 0 -- Zmienia prompt na natychmiastowe kliknięcie
                     fireproximityprompt(prompt)
                 end
             end
