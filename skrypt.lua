@@ -2,7 +2,7 @@ local Player = game.Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AutoPromptUI"
+ScreenGui.Name = "GejMateusz - Silka"
 ScreenGui.Parent = game.CoreGui
 
 local Frame = Instance.new("Frame", ScreenGui)
@@ -25,7 +25,7 @@ Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
 local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.Position = UDim2.new(0, 10, 0, 0)
-Title.Text = "Auto Prompt"
+Title.Text = "Silka"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
@@ -54,7 +54,7 @@ local IntervalBox = Instance.new("TextBox", Frame)
 IntervalBox.Size = UDim2.new(0, 200, 0, 35)
 IntervalBox.Position = UDim2.new(0, 20, 0, 110)
 IntervalBox.PlaceholderText = "Czas (sek)"
-IntervalBox.Text = "15"
+IntervalBox.Text = "12"
 IntervalBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 IntervalBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 IntervalBox.Font = Enum.Font.Gotham
@@ -78,17 +78,26 @@ StopBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
 StopBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", StopBtn).CornerRadius = UDim.new(0, 6)
 
+-- Efekt podświetlenia
+local PartHighlight = Instance.new("Highlight")
+PartHighlight.FillColor = Color3.fromRGB(52, 152, 219)
+PartHighlight.FillTransparency = 0.5
+PartHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+PartHighlight.Parent = game.CoreGui
+PartHighlight.Adornee = nil
+
 local selectedPart = nil
 local running = false
 
 SelectBtn.MouseButton1Click:Connect(function()
-    SelectBtn.Text = "Kliknij w part na mapie"
+    SelectBtn.Text = "Kliknij w part"
     local connection
     connection = Mouse.Button1Down:Connect(function()
         if Mouse.Target then
             selectedPart = Mouse.Target
             StatusLabel.Text = "Wybrano: " .. selectedPart.Name
             SelectBtn.Text = "Zmień part"
+            PartHighlight.Adornee = selectedPart -- Ustawia podświetlenie na kliknięty part
             connection:Disconnect()
         end
     end)
@@ -103,7 +112,7 @@ StartBtn.MouseButton1Click:Connect(function()
             if selectedPart then
                 local prompt = selectedPart:FindFirstChildOfClass("ProximityPrompt")
                 if prompt then
-                    prompt.HoldDuration = 0 -- Zmienia prompt na natychmiastowe kliknięcie
+                    prompt.HoldDuration = 0
                     fireproximityprompt(prompt)
                 end
             end
@@ -118,5 +127,6 @@ end)
 
 CloseBtn.MouseButton1Click:Connect(function()
     running = false
+    if PartHighlight then PartHighlight:Destroy() end -- Usuwa podświetlenie po zamknięciu
     ScreenGui:Destroy()
 end)
